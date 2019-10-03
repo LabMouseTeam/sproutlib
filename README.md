@@ -52,7 +52,7 @@ baz: 42
 
 and the above class *Foo* can be instantiated with either one with the same
 result:
-```y = """bar: 'i am a bar'\nbaz: 42"""
+```y = \"\"\"bar: 'i am a bar'\nbaz: 42\"\"\"
 f = Foo(y)
 
 d = {'bar': 'i am a bar', 'baz': 42}
