@@ -47,7 +47,8 @@ YAML:
 baz: 42
 ```
 
-```{'bar': 'i am a bar', 'baz': 42}```
+```{'bar': 'i am a bar', 'baz': 42}
+```
 
 and the above class *Foo* can be instantiated with either one with the same
 result:
@@ -55,7 +56,8 @@ result:
 f = Foo(y)
 
 d = {'bar': 'i am a bar', 'baz': 42}
-f = Foo(y)```
+f = Foo(y)
+```
 
 ## Type
 The 'type' parameter dictates what type of data should be stored at this
@@ -73,10 +75,12 @@ remote API will never raise an exception because of a missing parameter.
 For example, in the above class, if we did:
 ```f = Foo()
     f['baz'] = 127
-    api_call = str(f)```
+    api_call = str(f)
+```
 
 The following would be sent via JSON to the remote API:
-```{"bar": "","baz": 127}```
+```{"bar": "","baz": 127}
+```
 
 This makes it faster and simpler to both generate API schemas and interact
 with the remote endpoint.
