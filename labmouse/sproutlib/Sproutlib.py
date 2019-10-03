@@ -57,6 +57,7 @@ class SproutRoot(dict):
             try:
                 a = json.loads(args[0])
             except Exception as E:
+                # If JSON didn't work, presume its YAML.
                 try:
                     a = yaml.safe_load(args[0])
                 except Exception as E:
