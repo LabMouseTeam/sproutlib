@@ -114,7 +114,8 @@ class SproutRoot(dict):
 
     def __test_strict(self, _v, _t):
         if not isinstance(_v, _t):
-            raise SproutStrictTypeException("SproutRoot.set: strict ({0}!={1})".format(
+            raise SproutStrictTypeException(
+                    "SproutRoot.set: strict ({0}!={1})".format(
                             _t,
                             type(_v)))
 
