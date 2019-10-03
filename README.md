@@ -31,10 +31,10 @@ YAML or JSON configuration.
 
 ```
 class Foo(SproutRoot):
-    class bar(Schema):
+    class bar(SproutSchema):
         required = True
         strict = True
-    class baz(Schema):
+    class baz(SproutSchema):
         type = int
 
     ...
@@ -43,12 +43,14 @@ class Foo(SproutRoot):
 This class can now be instantiated using a Python dict, YAML configuration
 string, or a JSON string. For example, the following Python dict and YAML
 string contains the same information:
+
 YAML:
 ```
 bar: 'i am a bar'
 baz: 42
 ```
 
+JSON:
 ```
 {'bar': 'i am a bar', 'baz': 42}
 ```
