@@ -29,7 +29,8 @@ Next, create SproutSchema objects as subclasses. The SproutSchema classes
 define a namespace that will be used as configuration keys in the corresponding
 YAML or JSON configuration.
 
-```class Foo(SproutRoot):
+```
+class Foo(SproutRoot):
     class bar(Schema):
         required = True
         strict = True
@@ -43,16 +44,19 @@ This class can now be instantiated using a Python dict, YAML configuration
 string, or a JSON string. For example, the following Python dict and YAML
 string contains the same information:
 YAML:
-```bar: 'i am a bar'
+```
+bar: 'i am a bar'
 baz: 42
 ```
 
-```{'bar': 'i am a bar', 'baz': 42}
+```
+{'bar': 'i am a bar', 'baz': 42}
 ```
 
 and the above class *Foo* can be instantiated with either one with the same
 result:
-```y = \"\"\"bar: 'i am a bar'\nbaz: 42\"\"\"
+```
+y = """bar: 'i am a bar'\nbaz: 42"""
 f = Foo(y)
 
 d = {'bar': 'i am a bar', 'baz': 42}
@@ -73,13 +77,15 @@ string version of the object is generated, helping guarantee that the
 remote API will never raise an exception because of a missing parameter.
 
 For example, in the above class, if we did:
-```f = Foo()
+```
+f = Foo()
     f['baz'] = 127
     api_call = str(f)
 ```
 
 The following would be sent via JSON to the remote API:
-```{"bar": "","baz": 127}
+```
+{"bar": "","baz": 127}
 ```
 
 This makes it faster and simpler to both generate API schemas and interact
