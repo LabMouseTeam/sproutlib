@@ -60,7 +60,7 @@ y = """bar: 'i am a bar'\nbaz: 42"""
 f = Foo(y)
 
 d = {'bar': 'i am a bar', 'baz': 42}
-f = Foo(y)
+f = Foo(d)
 ```
 
 ## Type
@@ -79,13 +79,13 @@ remote API will never raise an exception because of a missing parameter.
 For example, in the above class, if we did:
 ```
 f = Foo()
-    f['baz'] = 127
-    api_call = str(f)
+f['baz'] = 127
+api_call['foo'] = str(f)
 ```
 
 The following would be sent via JSON to the remote API:
 ```
-{"bar": "","baz": 127}
+{'foo': {"bar": "","baz": 127}}
 ```
 
 This makes it faster and simpler to both generate API schemas and interact
