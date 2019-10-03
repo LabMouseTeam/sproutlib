@@ -1,0 +1,18 @@
+#
+#
+#
+
+# ignore VIM temp and swap files
+*~
+*.swp
+*.swo
+
+# ignore python caches
+__pycache__
+
+# ignore ctags
+tags
+
+# ignore the build log
+make.log
+
