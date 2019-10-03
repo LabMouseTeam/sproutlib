@@ -134,7 +134,8 @@ class SproutRoot(dict):
             _t = k.type
             _v = v
 
-            # We only validate two levels deep.
+            # We only validate another level deep.
+            # XXX update this to be recursive, if possible.
             if _t == list and k.subtype is not None:
                 # First, make sure the list is a list.
                 self.__test_strict(v, list)
