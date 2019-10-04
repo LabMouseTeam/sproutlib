@@ -82,8 +82,8 @@ class SproutRoot(dict):
     def keys(self):
         # Only return keys that exist or are required.
         r = []
-        l = self._getmembers()
-        for i in l:
+        m = self._getmembers()
+        for i in m:
             if ((i not in self) and (i.required is True)) or (i in self):
                 r += [i]
 
@@ -158,7 +158,7 @@ class SproutRoot(dict):
                ((x.subtype != list) and
                (x.subtype != tuple))):
 
-                l = []
+                m = []
                 for i in dict.__getitem__(self, x):
                     o = x.subtype
 
@@ -171,8 +171,8 @@ class SproutRoot(dict):
                     else:
                         o = i
 
-                    l += [o]
-                return l
+                    m += [o]
+                return m
 
             elif ((x.type == list) and
                   ((x.subtype == list) or
