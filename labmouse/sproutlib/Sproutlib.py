@@ -162,6 +162,10 @@ class SproutRoot(dict):
         return dict.__setitem__(self, k, v)
 
     def __getitem__(self, x):
+        # Allow gets based on the name, if it exists
+        if isinstance(x, str):
+            x = self.__string_to_schema(x)
+
         # Handle custom types
         if (x in self) and (x.type not in self.__BUILTIN__):
             o = None
