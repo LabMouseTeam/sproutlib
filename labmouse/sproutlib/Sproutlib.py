@@ -1,13 +1,22 @@
+'''
+This is a docstring to appease pylint. Fuck you, pylint.
+'''
 import inspect
 import json
 import yaml
 
 
 class SproutStrictTypeException(Exception):
+    '''
+    This is a docstring to appease pylint. Fuck you, pylint.
+    '''
     pass
 
 
 class SproutSchema(object):
+    '''
+    This is a docstring to appease pylint. Fuck you, pylint.
+    '''
     required = False
     strict = True
     hidden = False
@@ -16,6 +25,9 @@ class SproutSchema(object):
 
 
 class SproutRoot(dict):
+    '''
+    This is a docstring to appease pylint. Fuck you, pylint.
+    '''
     __BUILTIN__ = [
         bytes,
         float,
@@ -53,7 +65,7 @@ class SproutRoot(dict):
 
         # If we were seeded with a string, presume it's either YAML or JSON,
         # and parse it into an object.
-        if len(args) == 1 and type(args[0]) == str:
+        if len(args) == 1 and isinstance(args[0], str):
             try:
                 a = json.loads(args[0])
             except Exception as E:
@@ -74,7 +86,7 @@ class SproutRoot(dict):
             c = ''
             try:
                 c = getattr(self, k)
-            except Exception as e:
+            except Exception:
                 c = k
 
             dict.__setitem__(self, c, d[k])
@@ -115,9 +127,9 @@ class SproutRoot(dict):
     def __test_strict(self, _v, _t):
         if not isinstance(_v, _t):
             raise SproutStrictTypeException(
-                    "SproutRoot.set: strict ({0}!={1})".format(
-                            _t,
-                            type(_v)))
+                "SproutRoot.set: strict ({0}!={1})".format(
+                    _t,
+                    type(_v)))
 
     def __string_to_schema(self, k):
         for i in self._getmembers():
@@ -127,7 +139,7 @@ class SproutRoot(dict):
         return None
 
     def __setitem__(self, k, v):
-        if type(k) == str:
+        if isinstance(k, str):
             k = self.__string_to_schema(k)
 
         if k.strict is True:
@@ -135,7 +147,7 @@ class SproutRoot(dict):
             _v = v
 
             # We only validate another level deep.
-            # XXX update this to be recursive, if possible.
+            # DONB update this to be recursive, if possible.
             if _t == list and k.subtype is not None:
                 # First, make sure the list is a list.
                 self.__test_strict(v, list)
@@ -151,12 +163,10 @@ class SproutRoot(dict):
 
     def __getitem__(self, x):
         # Handle custom types
-        if ((x in self) and
-           (x.type not in self.__BUILTIN__)):
+        if (x in self) and (x.type not in self.__BUILTIN__):
             o = None
-            if ((x.type == list) and
-               ((x.subtype != list) and
-               (x.subtype != tuple))):
+            st = x.subtype
+            if (x.type == list) and ((st != list) and (st != tuple)):
 
                 m = []
                 for i in dict.__getitem__(self, x):
@@ -174,9 +184,7 @@ class SproutRoot(dict):
                     m += [o]
                 return m
 
-            elif ((x.type == list) and
-                  ((x.subtype == list) or
-                  (x.subtype == tuple))):
+            elif (x.type == list) and ((st == list) or (st == tuple)):
                 return dict.__getitem__(self, x)
 
             else:
@@ -184,7 +192,7 @@ class SproutRoot(dict):
                 o.update(dict.__getitem__(self, x))
                 return o
 
-        elif ((x not in self) and (x.required is True)):
+        elif (x not in self) and (x.required is True):
             return x.type()
 
         # If the type is a builtin, just return the value
@@ -213,11 +221,11 @@ class SproutRoot(dict):
         t2 = []
         for i in t:
             D1 = i[0]
-            if type(i[0]) == dict or type(i[0]) == list:
+            if isinstance(i[0], dict) or isinstance(i[0], list):
                 D1 = json.dumps(i[0])
 
             D2 = i[1]
-            if type(i[1]) == dict or type(i[1]) == list:
+            if isinstance(i[1], dict) or isinstance(i[1], list):
                 D2 = json.dumps(i[1])
 
             t2 += [(D1, D2)]
@@ -250,6 +258,9 @@ class SproutRoot(dict):
         return self.__json_dumps(d)
 
     def className(self):
+        '''
+        DONB: I forgot why I needed this. Test and delete.
+        '''
         return self.__class__.__name__
 
     def __json_dumps(self, d):
@@ -264,7 +275,7 @@ class SproutRoot(dict):
         s = []
         for k in d.keys():
             v = d[k]
-            if type(k) != str and issubclass(k, SproutSchema):
+            if (isinstance(k, str) is not True) and issubclass(k, SproutSchema):
                 k = k.__name__
 
             if (isinstance(v, list) or
@@ -285,9 +296,9 @@ class SproutRoot(dict):
                 else:
                     s += ["\"{0}\": \"{1}\"".format(k, v)]
 
-        s = ",".join(s)
+        r = ",".join(s)
 
-        return "{0}{1}{2}".format('{', s, '}')
+        return "{0}{1}{2}".format('{', r, '}')
 
     def __json_list(self, d):
         s = []
@@ -303,6 +314,6 @@ class SproutRoot(dict):
                 else:
                     s += ["\"{0}\"".format(v)]
 
-        s = ",".join(s)
+        r = ",".join(s)
 
-        return "[{0}]".format(s)
+        return "[{0}]".format(r)
