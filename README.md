@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/LabMouseTeam/sproutlib.svg?branch=master)](https://travis-ci.com/LabMouseTeam/sproutlib)
+[![Build Status](https://travis-ci.com/LabMouseTeam/sproutlib.svg?branch=master)](https://travis-ci.com/LabMouseTeam/sproutlib) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=LabMouseTeam_sproutlib&metric=security_rating)](https://sonarcloud.io/dashboard?id=LabMouseTeam_sproutlib) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=LabMouseTeam_sproutlib&metric=bugs)](https://sonarcloud.io/dashboard?id=LabMouseTeam_sproutlib)
 
 # SproutLib
 
