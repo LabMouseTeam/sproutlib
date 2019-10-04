@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/LabMouseTeam/sproutlib.svg?branch=master)](https://travis-ci.com/LabMouseTeam/sproutlib)
+
 # SproutLib
 
 Release: 1.0.0
