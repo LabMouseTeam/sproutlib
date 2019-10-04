@@ -275,15 +275,19 @@ class SproutRoot(dict):
         s = []
         for k in d.keys():
             v = d[k]
+
+            # If the key isn't a string, use the class name.
             if (isinstance(k, str) is not True) and issubclass(k, SproutSchema):
                 k = k.__name__
 
+            # If the object is iterable, get recursive.
             if (isinstance(v, list) or
                     isinstance(v, tuple) or
                     isinstance(v, dict)):
                 v = self.__json_dumps(v)
                 s += ["\"{0}\": {1}".format(k, v)]
             else:
+                # If the object is a number, generate the proper value.
                 if isinstance(v, int) or isinstance(v, float):
                     # Bool is a sub of int. Make json happy.
                     if isinstance(v, bool):
@@ -294,6 +298,7 @@ class SproutRoot(dict):
 
                     s += ["\"{0}\": {1}".format(k, v)]
                 else:
+                    # Otherwise, the type should be str.
                     s += ["\"{0}\": \"{1}\"".format(k, v)]
 
         r = ",".join(s)
