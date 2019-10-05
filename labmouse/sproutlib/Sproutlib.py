@@ -303,7 +303,38 @@ class SproutRoot(dict):
                     s += ["\"{0}\": {1}".format(k, v)]
                 else:
                     # Otherwise, the type should be str.
-                    s += ["\"{0}\": \"{1}\"".format(k, v)]
+                    if isinstance(v, str):
+                        s += ["\"{0}\": \"{1}\"".format(k, v)]
+                    else:
+                        # For anything not caught by the above expressions, we
+                        # presume the child object(s) may have a specific way
+                        # to pickle the non-standard data. All we do otherwise
+                        # is stringify the data, which is probably not what you
+                        # want, especially if this data needs to be bytes, for
+                        # example, and it needs to be deserialized correctly on
+                        # the other end of whatever you're talking to.
+                        #
+                        # The notable side-effect of this transparency is that
+                        # the receiver of the data must known how to unpickle
+                        # it. Presumably the designer of a protocol using this
+                        # library would know this, but it's worth expressing
+                        # here. We also cannot provide a callback to unpickle
+                        # all string data because - obviously - that would
+                        # create extreme latency for what would mostly be false
+                        # positives. Plan on unpickling things before you use
+                        # them.
+                        #
+                        # If, for example, an object needs to be a bytes
+                        # object, but needs to be accepted as a pickled JSON
+                        # string, the object should be set to 'strict = False'
+                        # and changed to bytes once the object is instantiated.
+                        try:
+                            x = getattr(self, 'sproutpickle')
+                            v = x(v)
+                        except Exception as E:
+                            pass
+
+                        s += ["\"{0}\": \"{1}\"".format(k, v)]
 
         r = ",".join(s)
 
