@@ -37,6 +37,7 @@ class SproutRoot(dict):
         dict,
         tuple,
         object,
+        list,
         ]
 
     __iter_i = 0
@@ -192,8 +193,12 @@ class SproutRoot(dict):
                 return dict.__getitem__(self, x)
 
             else:
-                o = x.type()
-                o.update(dict.__getitem__(self, x))
+                try:
+                    o = x.type()
+                    getattr(o, 'update')
+                    o.update(dict.__getitem__(self, x))
+                except AttributeError:
+                    o = x
                 return o
 
         elif (x not in self) and (x.required is True):
@@ -332,6 +337,7 @@ class SproutRoot(dict):
                             x = getattr(self, 'sproutpickle')
                             v = x(v)
                         except Exception as E:
+                            print('exception? {}'.format(E))
                             pass
 
                         s += ["\"{0}\": \"{1}\"".format(k, v)]
@@ -354,6 +360,6 @@ class SproutRoot(dict):
                 else:
                     s += ["\"{0}\"".format(v)]
 
-        r = ",".join(s)
+        r = ", ".join(s)
 
         return "[{0}]".format(r)
