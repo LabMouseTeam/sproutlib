@@ -5,6 +5,80 @@ import json
 import sys
 
 
+class TestInheritance(unittest.TestCase):
+    '''
+    Test object inheritance for SproutSchema.
+    '''
+    class Foo(SproutRoot):
+        class f1(SproutSchema):
+            pass
+
+        class f2(SproutSchema):
+            required = True
+
+        class f3(SproutSchema):
+            required = True
+            type = int
+
+        class f4(SproutSchema):
+            required = True
+            type = list
+
+    class Bar(Foo):
+        class b1(SproutSchema):
+            required = True
+
+    class Baz(Bar):
+        class b2(SproutSchema):
+            pass
+
+    def test_basic(self):
+        '''
+        Test multiple levels of inheritance to ensure that the objects can be
+        configured automatically.
+        '''
+        y = """
+            # All objects are top level in the hierarchy
+            b1: 'b1'
+            b2: 'i am b2'
+            f1: 'f1'
+            f2: 'i am f2'
+            f3: 127
+            f4:
+                - 1
+                - 2
+                - 3
+            """
+
+        b = self.Baz(y)
+
+        if b[b.b1] != 'b1':
+            raise Exception('inheritance1 failure')
+        if b[b.b2] != 'i am b2':
+            raise Exception('inheritance1 failure')
+        if b[b.f1] != 'f1':
+            raise Exception('inheritance1 failure')
+        if b[b.f2] != 'i am f2':
+            raise Exception('inheritance1 failure')
+        if b[b.f3] != 127:
+            raise Exception('inheritance1 failure')
+        if b[b.f4] != [1, 2, 3]:
+            raise Exception('inheritance1 failure')
+
+        if b['b1'] != 'b1':
+            raise Exception('inheritance1 failure')
+        if b['b2'] != 'i am b2':
+            raise Exception('inheritance1 failure')
+        if b['f1'] != 'f1':
+            raise Exception('inheritance1 failure')
+        if b['f2'] != 'i am f2':
+            raise Exception('inheritance1 failure')
+        if b['f3'] != 127:
+            raise Exception('inheritance1 failure')
+        if b['f4'] != [1, 2, 3]:
+            raise Exception('inheritance1 failure')
+
+
 class TestObject(unittest.TestCase):
     '''
     Test the python float type.
