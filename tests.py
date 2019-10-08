@@ -5,6 +5,109 @@ import json
 import sys
 
 
+class TestConsistency(unittest.TestCase):
+    '''
+    Ensure complex objects added to the internal dictionary are converted from
+    dicts to their actual object, and a change to the object ensures a change
+    in the object stored in the dict. Do not create a new object for every
+    get operation, which wastes memory and refs. If users want a clone, they
+    should copy the value themselves.
+    '''
+    class Bar(SproutRoot):
+        class bar1(SproutSchema):
+            required = True
+            strict = True
+
+        class bar2(SproutSchema):
+            required = True
+            strict = True
+            type = int
+
+    def test_basic(self):
+        class Foo(SproutRoot):
+            class bar(SproutSchema):
+                type = TestConsistency.Bar
+
+        s = """
+            bar:
+                bar1: 'i am bar1'
+                bar2: 127
+            """
+        f = Foo(s)
+
+        b = f['bar']
+        if b['bar1'] != 'i am bar1':
+            raise Exception('TestConsistency: i am not bar1')
+        if b['bar2'] != 127:
+            raise Exception('TestConsistency: bar2')
+
+        b['bar2'] += 1
+
+        if f['bar']['bar2'] != 128:
+            raise Exception('TestConsistency: object inconsistent')
+
+
+class TestOwnership(unittest.TestCase):
+    '''
+    Test class variables for contamination.
+    '''
+    class Foo(SproutRoot):
+        class bar(SproutSchema):
+            required = True
+            strict = True
+
+        class baz(SproutSchema):
+            strict = True
+            type = int
+
+        __consumers = 0
+        name = '<unset>'
+
+        def __init__(self, n, *args,**kwargs):
+            SproutRoot.__init__(self, *args, **kwargs)
+            type(self).__consumers += 1
+            self.name = n
+
+        def __del__(self):
+            type(self).__consumers -= 1
+
+        @staticmethod
+        def consumers():
+            return TestOwnership.Foo.__consumers
+
+    def test_basic(self):
+        s1 = """
+            bar: 'i am a bar'
+            baz: 127
+            """
+
+        s2 = """
+            bar: 'i am a bar2'
+            baz: 128
+            """
+
+        f1 = self.Foo('f1', s1)
+        f2 = self.Foo('f2', s2)
+
+        # Ensure class variable consistency (should never fail, obv)
+        if self.Foo.consumers() != 2:
+            raise Exception('TestOwnership: consumer value doesnt match')
+
+        if self.Foo.name != '<unset>':
+            raise Exception('TestOwnership: class variable corrupt')
+
+        if f1.name != 'f1':
+            raise Exception('TestOwnership: class->instance variable failure')
+        if f2.name != 'f2':
+            raise Exception('TestOwnership: class->instance variable failure')
+
+        del(f1)
+        del(f2)
+
+        if self.Foo.consumers() != 0:
+            raise Exception('TestOwnership: consumer value doesnt match')
+
+
 class TestInheritance(unittest.TestCase):
     '''
     Test object inheritance for SproutSchema.

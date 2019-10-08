@@ -193,16 +193,28 @@ class SproutRoot(dict):
                 return dict.__getitem__(self, x)
 
             else:
+                # First, attempt to retrieve the existing instance from the
+                # inner dictionary. Only if it doesn't exist do we create it.
+                v = dict.__getitem__(self, x)
+                if isinstance(v, x.type) is True:
+                    return v
+
                 try:
                     o = x.type()
                     getattr(o, 'update')
-                    o.update(dict.__getitem__(self, x))
+                    o.update(v)
                 except AttributeError:
                     o = x
+
+                # If we created an object, set it.
+                dict.__setitem__(self, x, o)
                 return o
 
         elif (x not in self) and (x.required is True):
-            return x.type()
+            v = x.type()
+            # Set the value so that we have a base type.
+            dict.__setitem__(self, x, v)
+            return v
 
         # If the type is a builtin, just return the value
         return dict.__getitem__(self, x)
