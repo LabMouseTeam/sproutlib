@@ -13,18 +13,36 @@ class SproutStrictTypeException(Exception):
     pass
 
 
-class SproutSchema(object):
+class SproutNoSuchAttributeException(Exception):
+    '''
+    This exception is used when an object is created that contains keys which
+    are not valid within the top-level object's name space. For example, if
+    the object:
+        class Foo(SproutSchema):
+            class bar(SproutSchema):
+                pass
+
+    is created using the following YAML
+        bar: 'i am a bar'
+        baz: 'i am a baz'
+
+    The key 'baz' should raise this exception, as no such key exists within
+    the namespace 'Foo'.
+    '''
+    pass
+
+
+class SproutSchema(dict):
     '''
     This is a docstring to appease pylint. Fuck you, pylint.
     '''
     required = False
-    strict = True
+    strict = False
     hidden = False
     subtype = None
     type = str
 
 
-class SproutRoot(dict):
     '''
     This is a docstring to appease pylint. Fuck you, pylint.
     '''
@@ -44,7 +62,7 @@ class SproutRoot(dict):
     __iter_l = []
 
     def _getmembers(self):
-        x = inspect.getmembers(self.__class__, lambda a: SproutRoot._find(a))
+        x = inspect.getmembers(self.__class__, lambda a: SproutSchema._find(a))
         return [i[1] for i in x]
 
     def _find(a):
@@ -90,7 +108,8 @@ class SproutRoot(dict):
             except Exception:
                 c = k
 
-            dict.__setitem__(self, c, d[k])
+            # Going to dict directly bypasses Strict etc
+            self.__setitem__(c, d[k])
 
     def keys(self):
         # Only return keys that exist or are required.
@@ -125,12 +144,45 @@ class SproutRoot(dict):
             elif k in self:
                 yield (k, self[k])
 
-    def __test_strict(self, _v, _t):
-        if not isinstance(_v, _t):
+    def __test_strict2(self, k, _v, _t):
+        if k.strict is True and not isinstance(_v, _t):
             raise SproutStrictTypeException(
                 "SproutRoot.set: strict ({0}!={1})".format(
                     _t,
                     type(_v)))
+
+        # We can't recursively inspect a dict, list, or tuple, because we
+        # cannot accurately describe what should be in each facet of that
+        # object. This works for lists at the top level, but not for lists as a
+        # sub. A list as the type just means that there is a list, but does not
+        # require the sub (facets of the list) to be a specific thing. This is
+        # what the `subtype' clause is meant for, but that only describes one
+        # level down. We can't go further with simple container types.
+
+        # If the type is a SproutSchema container, recurse
+        if issubclass(k.type, SproutSchema) is True:
+            for i in _v.items():
+                x = getattr(k, i[0], None)
+                if x is None:
+                    raise SproutNoSuchAttributeException(
+                        "SproutRoot.set: no such object '{0}' within namespace {1}".format(
+                            i[0],
+                            k))
+
+                if issubclass(x.type, SproutSchema) is not True:
+                    if x.strict is not True:
+                        continue
+
+                    if type(i[1]) != x.type:
+                        raise SproutStrictTypeException(
+                            "SproutRoot.set: strict obj={2}['{3}'] types=({0}!={1})".format(
+                                type(i[1]),
+                                x.type,
+                                k,
+                                i[0]))
+                else:
+                    # Recurse to get all subs
+                    self.__test_strict2(x, i[1], None)
 
     def __string_to_schema(self, k):
         for i in self._getmembers():
@@ -139,11 +191,20 @@ class SproutRoot(dict):
 
         return None
 
-    def __setitem__(self, k, v):
-        if isinstance(k, str):
-            k = self.__string_to_schema(k)
+    def __setitem__(self, _k, v):
+        if isinstance(_k, str):
+            k = self.__string_to_schema(_k)
+        else:
+            k = _k
 
-        if k.strict is True:
+        if k is None:
+            raise SproutNoSuchAttributeException(
+                    'SproutRoot.set: no such attribute: {}'.format(k))
+
+        return self.__test_strict(k, v)
+
+    def __test_strict(self, k, v):
+        if k.strict is True or issubclass(k.type, SproutSchema) is True:
             _t = k.type
             _v = v
 
@@ -151,14 +212,14 @@ class SproutRoot(dict):
             # DONB update this to be recursive, if possible.
             if _t == list and k.subtype is not None:
                 # First, make sure the list is a list.
-                self.__test_strict(v, list)
+                self.__test_strict2(k, v, list)
 
                 # Now, ensure each facet of the list is valid.
                 _t = k.subtype
                 for i in v:
-                    self.__test_strict(i, _t)
+                    self.__test_strict2(k, i, _t)
             else:
-                self.__test_strict(_v, _t)
+                self.__test_strict2(k, _v, _t)
 
         return dict.__setitem__(self, k, v)
 
@@ -243,11 +304,19 @@ class SproutRoot(dict):
         for i in t:
             D1 = i[0]
             if isinstance(i[0], dict) or isinstance(i[0], list):
-                D1 = json.dumps(i[0])
+                if isinstance(i[0], SproutSchema) is True:
+                    D1 = json.dumps(i[0].items())
+                else:
+                    D1 = json.dumps(i[0])
 
             D2 = i[1]
             if isinstance(i[1], dict) or isinstance(i[1], list):
-                D2 = json.dumps(i[1])
+                if isinstance(i[1], SproutSchema) is True:
+                    #XXX D2 = json.dumps(i[1].items())
+                    # Evil hack for testing; please 2 fix me
+                    D2 = json.dumps({'meep': 'supermeep'})
+                else:
+                    D2 = json.dumps(i[1])
 
             t2 += [(D1, D2)]
 
@@ -349,7 +418,6 @@ class SproutRoot(dict):
                             x = getattr(self, 'sproutpickle')
                             v = x(v)
                         except Exception as E:
-                            print('exception? {}'.format(E))
                             pass
 
                         s += ["\"{0}\": \"{1}\"".format(k, v)]

@@ -1,8 +1,95 @@
-from labmouse.sproutlib.Sproutlib import SproutRoot, SproutSchema
+from labmouse.sproutlib.Sproutlib import SproutNoSuchAttributeException
+from labmouse.sproutlib.Sproutlib import SproutStrictTypeException
+from labmouse.sproutlib.Sproutlib import SproutSchema
 import unittest
 import base64
 import json
 import sys
+
+
+class TestRecursionBaz(SproutSchema):
+    class baz1(SproutSchema):
+        strict = True
+        type = int
+
+    class baz2(SproutSchema):
+        strict = True
+        type = str
+
+
+class TestRecursionBar(TestRecursionBaz):
+    class bar1(SproutSchema):
+        pass
+
+
+class TestNoSuchObject(unittest.TestCase):
+    '''
+    Ensure that arbitrary objects outside of the namespace cause exceptions.
+    '''
+    def test_basic(self):
+        class Foo(SproutSchema):
+            class bar(SproutSchema):
+                pass
+
+        s = """
+            bar: 'i am a bar'
+            baz: 'i am a baz'
+            """
+
+        try:
+            f = Foo(s)
+        except SproutNoSuchAttributeException:
+            # OK
+            return
+        except Exception as E:
+            raise Exception('TestNoSuchObject: unexpected: {}'.format(E))
+
+        raise Exception('TestNoSuchObject: no attribute exception raised')
+
+
+class TestRecursion(unittest.TestCase):
+    '''
+    Ensure attributes for complex objects are verified recursively.
+    '''
+    class Baz(SproutSchema):
+        class baz1(SproutSchema):
+            type = int
+            strict = True
+
+        class baz2(SproutSchema):
+            type = str
+            strict = True
+
+    class Bar(Baz):
+        class bar1(SproutSchema):
+            pass
+
+    def test_basic(self):
+        class Foo(SproutSchema):
+            class foo1(TestRecursion.Bar):
+                type = TestRecursion.Bar
+
+            class foo2(SproutSchema):
+                type = int
+                strict = True
+
+        s = """
+            foo1:
+                bar1: 'i am a bar1'
+                baz1: 127
+                baz2: 129
+            foo2: 130
+            """
+
+        try:
+            f = Foo(s)
+        except SproutStrictTypeException:
+            # OK
+            return
+        except Exception as E:
+            raise Exception('TestRecursion: unexpected: {}'.format(E))
+
+        raise Exception('TestRecursion: no strict exception raised')
 
 
 class TestConsistency(unittest.TestCase):
@@ -13,7 +100,7 @@ class TestConsistency(unittest.TestCase):
     get operation, which wastes memory and refs. If users want a clone, they
     should copy the value themselves.
     '''
-    class Bar(SproutRoot):
+    class Bar(SproutSchema):
         class bar1(SproutSchema):
             required = True
             strict = True
@@ -24,8 +111,8 @@ class TestConsistency(unittest.TestCase):
             type = int
 
     def test_basic(self):
-        class Foo(SproutRoot):
-            class bar(SproutSchema):
+        class Foo(SproutSchema):
+            class bar(TestConsistency.Bar):
                 type = TestConsistency.Bar
 
         s = """
@@ -51,7 +138,7 @@ class TestOwnership(unittest.TestCase):
     '''
     Test class variables for contamination.
     '''
-    class Foo(SproutRoot):
+    class Foo(SproutSchema):
         class bar(SproutSchema):
             required = True
             strict = True
@@ -64,7 +151,7 @@ class TestOwnership(unittest.TestCase):
         name = '<unset>'
 
         def __init__(self, n, *args,**kwargs):
-            SproutRoot.__init__(self, *args, **kwargs)
+            SproutSchema.__init__(self, *args, **kwargs)
             type(self).__consumers += 1
             self.name = n
 
@@ -112,7 +199,7 @@ class TestInheritance(unittest.TestCase):
     '''
     Test object inheritance for SproutSchema.
     '''
-    class Foo(SproutRoot):
+    class Foo(SproutSchema):
         class f1(SproutSchema):
             pass
 
@@ -199,7 +286,7 @@ class TestObject(unittest.TestCase):
                 return self.baz == x.baz and self.buu == x.buu
 
 
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class object1(SproutSchema):
                 required = True
                 type = object
@@ -219,7 +306,7 @@ class TestObject(unittest.TestCase):
                 self[self.object1] = b
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
 
@@ -260,7 +347,7 @@ class TestObject(unittest.TestCase):
                 return json.dumps(d)
 
 
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class object1(SproutSchema):
                 required = True
                 type = object
@@ -281,7 +368,7 @@ class TestObject(unittest.TestCase):
                 self[self.object1] = b
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
 
@@ -316,7 +403,7 @@ class TestList(unittest.TestCase):
         '''
         Ensure we can unpickle data without raising an exception.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class list1(SproutSchema):
                 required = True
                 type = list
@@ -326,7 +413,7 @@ class TestList(unittest.TestCase):
                 pass
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
         b1 = [1, "two", 3]
@@ -343,7 +430,7 @@ class TestList(unittest.TestCase):
         Just make sure the data is stored correctly and is retrievable via its
         name and its object.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             def sproutpickle(self, x):
                 return base64.b64encode(x).decode('utf-8')
 
@@ -380,7 +467,7 @@ class TestTuple(unittest.TestCase):
         '''
         Ensure we can unpickle data without raising an exception.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class tuple1(SproutSchema):
                 required = True
                 type = tuple
@@ -391,7 +478,7 @@ class TestTuple(unittest.TestCase):
                     self[self.tuple1] = tuple(self[self.tuple1])
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
         b1 = (1, "two", 3)
@@ -408,7 +495,7 @@ class TestTuple(unittest.TestCase):
         Just make sure the data is stored correctly and is retrievable via its
         name and its object.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             def sproutpickle(self, x):
                 return base64.b64encode(x).decode('utf-8')
 
@@ -445,7 +532,7 @@ class TestDict(unittest.TestCase):
         '''
         Ensure we can unpickle data without raising an exception.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class dict1(SproutSchema):
                 required = True
                 type = dict
@@ -455,7 +542,7 @@ class TestDict(unittest.TestCase):
                 pass
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
         b1 = {'sub1': {'sub2': {'sub3': 3}}}
@@ -472,7 +559,7 @@ class TestDict(unittest.TestCase):
         Just make sure the data is stored correctly and is retrievable via its
         name and its object.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             def sproutpickle(self, x):
                 return base64.b64encode(x).decode('utf-8')
 
@@ -509,7 +596,7 @@ class TestBool(unittest.TestCase):
         '''
         Ensure we can unpickle data without raising an exception.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class bool1(SproutSchema):
                 required = True
                 type = bool
@@ -519,7 +606,7 @@ class TestBool(unittest.TestCase):
                 pass
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
         b1 = True
@@ -533,7 +620,7 @@ class TestBool(unittest.TestCase):
         Just make sure the data is stored correctly and is retrievable via its
         name and its object.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             def sproutpickle(self, x):
                 return base64.b64encode(x).decode('utf-8')
 
@@ -570,7 +657,7 @@ class TestInt(unittest.TestCase):
         '''
         Ensure we can unpickle data without raising an exception.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class int1(SproutSchema):
                 required = True
                 type = int
@@ -580,7 +667,7 @@ class TestInt(unittest.TestCase):
                 pass
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
         b1 = 127
@@ -594,7 +681,7 @@ class TestInt(unittest.TestCase):
         Just make sure the data is stored correctly and is retrievable via its
         name and its object.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             def sproutpickle(self, x):
                 return base64.b64encode(x).decode('utf-8')
 
@@ -631,7 +718,7 @@ class TestStr(unittest.TestCase):
         '''
         Ensure we can unpickle data without raising an exception.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class str1(SproutSchema):
                 required = True
 
@@ -640,7 +727,7 @@ class TestStr(unittest.TestCase):
                 pass
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
         b1 = "the quick brown fox posts pointlessly on reddit"
@@ -657,7 +744,7 @@ class TestStr(unittest.TestCase):
         Just make sure the data is stored correctly and is retrievable via its
         name and its object.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             def sproutpickle(self, x):
                 return base64.b64encode(x).decode('utf-8')
 
@@ -693,7 +780,7 @@ class TestFloat(unittest.TestCase):
         '''
         Ensure we can unpickle data without raising an exception.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class float1(SproutSchema):
                 required = True
                 type = float
@@ -703,7 +790,7 @@ class TestFloat(unittest.TestCase):
                 pass
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
         b1 = 0.127
@@ -717,7 +804,7 @@ class TestFloat(unittest.TestCase):
         Just make sure the data is stored correctly and is retrievable via its
         name and its object.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             def sproutpickle(self, x):
                 return base64.b64encode(x).decode('utf-8')
 
@@ -755,7 +842,7 @@ class TestBytes(unittest.TestCase):
         '''
         Ensure we can unpickle data without raising an exception.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             class bytes1(SproutSchema):
                 required = True
                 type = str
@@ -766,7 +853,7 @@ class TestBytes(unittest.TestCase):
                     self[self.bytes1] = base64.b64decode(self[self.bytes1])
 
             def __init__(self, *args, **kwargs):
-                SproutRoot.__init__(self, *args, **kwargs)
+                SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
 
         b1 = b'\x11\x22\x33\x44\x55'
@@ -781,7 +868,7 @@ class TestBytes(unittest.TestCase):
         Just make sure the data is stored correctly and is retrievable via its
         name and its object.
         '''
-        class Foo(SproutRoot):
+        class Foo(SproutSchema):
             def sproutpickle(self, x):
                 return base64.b64encode(x).decode('utf-8')
 
