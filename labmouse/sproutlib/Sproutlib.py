@@ -65,6 +65,7 @@ class SproutSchema(dict):
         x = inspect.getmembers(self.__class__, lambda a: SproutSchema._find(a))
         return [i[1] for i in x]
 
+    @staticmethod
     def _find(a):
         if not inspect.isclass(a):
             return False
@@ -87,11 +88,11 @@ class SproutSchema(dict):
         if len(args) == 1 and isinstance(args[0], str):
             try:
                 a = json.loads(args[0])
-            except Exception as E:
+            except json.JSONDecodeError:
                 # If JSON didn't work, presume its YAML.
                 try:
                     a = yaml.safe_load(args[0])
-                except Exception as E:
+                except yaml.parser.ParserError as E:
                     raise E
         else:
             a = args[0]
@@ -105,7 +106,7 @@ class SproutSchema(dict):
             c = ''
             try:
                 c = getattr(self, k)
-            except Exception:
+            except AttributeError:
                 c = k
 
             # Going to dict directly bypasses Strict etc
@@ -173,7 +174,7 @@ class SproutSchema(dict):
                     if x.strict is not True:
                         continue
 
-                    if type(i[1]) != x.type:
+                    if isinstance(i[1], x.type) is not True:
                         raise SproutStrictTypeException(
                             "SproutRoot.set: strict obj={2}['{3}'] types=({0}!={1})".format(
                                 type(i[1]),
@@ -199,7 +200,7 @@ class SproutSchema(dict):
 
         if k is None:
             raise SproutNoSuchAttributeException(
-                    'SproutRoot.set: no such attribute: {}'.format(k))
+                'SproutRoot.set: no such attribute: {}'.format(k))
 
         return self.__test_strict(k, v)
 
@@ -347,12 +348,6 @@ class SproutSchema(dict):
 
         return self.__json_dumps(d)
 
-    def className(self):
-        '''
-        DONB: I forgot why I needed this. Test and delete.
-        '''
-        return self.__class__.__name__
-
     def __json_dumps(self, d):
         if isinstance(d, dict):
             return self.__json_dict(d)
@@ -417,7 +412,7 @@ class SproutSchema(dict):
                         try:
                             x = getattr(self, 'sproutpickle')
                             v = x(v)
-                        except Exception as E:
+                        except AttributeError:
                             pass
 
                         s += ["\"{0}\": \"{1}\"".format(k, v)]

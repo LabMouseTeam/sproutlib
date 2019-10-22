@@ -2,7 +2,9 @@
 
 # SproutLib
 
-Release: 1.0.0
+Release: 2.0.0
+
+![Sproutlib Logo](logo/sproutlib.gif)
 
 SproutLib is a set of python3 classes that enable *infrastructure as code* in
 a new, dynamic microservice model.
@@ -124,3 +126,8 @@ https://github.com/23andMe/Yamale
 This tool can help you define not only the YAML configuration files for your
 project, but how your objects should be defined within your microservice as
 you compose your code.
+
+# Thanks
+Thanks to pixelrogueart for creating our custom logo. Check him out on
+Instagram here: [@pixelrogueart](https://www.instagram.com/pixelrogueart/)
+
