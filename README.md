@@ -1,12 +1,12 @@
 [![Build Status](https://travis-ci.com/LabMouseTeam/sproutlib.svg?branch=master)](https://travis-ci.com/LabMouseTeam/sproutlib) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=LabMouseTeam_sproutlib&metric=security_rating)](https://sonarcloud.io/dashboard?id=LabMouseTeam_sproutlib) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=LabMouseTeam_sproutlib&metric=bugs)](https://sonarcloud.io/dashboard?id=LabMouseTeam_sproutlib) [![Package Vulnerabilities](https://snyk.io/test/github/LabMouseTeam/sproutlib/badge.svg)](https://snyk.io/test/github/LabMouseTeam/sproutlib)
 
-# SproutLib
+# Sproutlib
 
 Release: 2.0.0
 
 ![Sproutlib Logo](logo/sproutlib.gif)
 
-SproutLib is a set of python3 classes that enable *infrastructure as code* in
+Sproutlib is a set of python3 classes that enable *infrastructure as code* in
 a new, dynamic microservice model.
 
 Instead of defining configuration files that *describe* how services should
@@ -17,24 +17,24 @@ This allows for more direct relationship between YAML and executable code
 by directly coupling YAML to variables that control each layer of an object
 oriented microservice.
 
-As a result, SproutLib also serves as a way to safely serialize objects
+As a result, Sproutlib also serves as a way to safely serialize objects
 across a transport, allowing for a single microservice configuration to be
 spawned across N nodes with a single queue write operation. What's elegant
-about the SproutLib model for spawning similar microservices is that the
+about the Sproutlib model for spawning similar microservices is that the
 service itself can render itself as a string, which will be valid JSON. This
 enables each microservice to clone its specific configuration instantly
 without additional work.
 
 # Usage
 First, create an object that is based on any object tree you like, but is
-rooted at labmouse.sproutlib.SproutRoot
+rooted at labmouse.sproutlib.SproutSchema
 
 Next, create SproutSchema objects as subclasses. The SproutSchema classes
 define a namespace that will be used as configuration keys in the corresponding
 YAML or JSON configuration.
 
 ```
-class Foo(SproutRoot):
+class Foo(SproutSchema):
     class bar(SproutSchema):
         required = True
         strict = True
@@ -67,6 +67,40 @@ f = Foo(y)
 
 d = {'bar': 'i am a bar', 'baz': 42}
 f = Foo(d)
+```
+
+Complex classes can even be created to make it easier to contain information
+to a specific namespace (or set of namespaces). 
+```
+class Bar(SproutSchema):
+    class bar1(SproutSchema):
+        type = int
+        strict = True
+
+    class bar2(SproutSchema):
+        type = float
+        strict = True
+
+
+class Foo(Bar, Thread):
+    class foo1(SproutSchema):
+        pass
+
+    class foo2(SproutSchema):
+        pass
+
+    def __init__(self, *args, **kwargs):
+        SproutSchema.__init__(self, *args, **kwargs)
+        Thread.__init__(self)
+
+    def run(self):
+        ... do a thread thing here ...
+
+
+if __name__ == "__main__":
+    f = Foo('''...data...''')
+    f.start()
+    ...
 ```
 
 ## Type
