@@ -4,7 +4,9 @@
 
 Release: 2.0.0
 
-<center>![Sproutlib Logo](logo/sproutlib.gif)</center>
+<div align="center">
+	<img src="https://github.com/LabMouseTeam/sproutlib/tree/master/logo/sproutlib.gif">
+</div>
 
 Sproutlib is a set of python3 classes that enable *infrastructure as code* in
 a new, dynamic microservice model.
