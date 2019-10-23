@@ -2,8 +2,6 @@
 
 # Sproutlib
 
-Release: 2.0.0
-
 <div align="center">
 	<img src="https://github.com/LabMouseTeam/sproutlib/blob/master/logo/sproutlib.gif">
 </div>
