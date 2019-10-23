@@ -4,7 +4,7 @@
 
 Release: 2.0.0
 
-![Sproutlib Logo](logo/sproutlib.gif)
+<center>![Sproutlib Logo](logo/sproutlib.gif)</center>
 
 Sproutlib is a set of python3 classes that enable *infrastructure as code* in
 a new, dynamic microservice model.
@@ -165,3 +165,5 @@ you compose your code.
 Thanks to pixelrogueart for creating our custom logo. Check him out on
 Instagram here: [@pixelrogueart](https://www.instagram.com/pixelrogueart/)
 
+# License
+Sproutlib uses the GNU General Public License v3.0.

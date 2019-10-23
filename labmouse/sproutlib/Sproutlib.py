@@ -1,5 +1,8 @@
+# Copyright 2019 Lab Mouse, Inc. All Rights Reserved.
 '''
-This is a docstring to appease pylint. Fuck you, pylint.
+Sproutlib is a library focused on turning standard Python 3 classes into
+dynamic microservice objects from YAML. For more information, please see
+the README.md file.
 '''
 import json
 
