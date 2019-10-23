@@ -3,10 +3,10 @@ This is a docstring to appease pylint. Fuck you, pylint.
 '''
 import json
 
+from random import getrandbits as random_getrandbits
+
 from inspect import getmembers as inspect_getmembers
 from inspect import isclass as inspect_isclass
-
-from random import getrandbits as random_getrandbits
 
 from copy import deepcopy as copy_deepcopy
 from copy import copy as copy_copy
@@ -74,9 +74,6 @@ class SproutSchema(dict):
     subtype = None
     type = str
 
-    '''
-    This is a docstring to appease pylint. Fuck you, pylint.
-    '''
     __BUILTIN__ = [
         bytes,
         float,
@@ -382,28 +379,12 @@ class SproutSchema(dict):
         return d
 
     def __hash__(self):
-        t = tuple(self.items())
-        t2 = []
-        for i in t:
-            D1 = i[0]
-            if isinstance(i[0], dict) or isinstance(i[0], list):
-                if isinstance(i[0], SproutSchema) is True:
-                    D1 = json.dumps(i[0].items())
-                else:
-                    D1 = json.dumps(i[0])
-
-            D2 = i[1]
-            if isinstance(i[1], dict) or isinstance(i[1], list):
-                if isinstance(i[1], SproutSchema) is True:
-                    # XXX D2 = json.dumps(i[1].items())
-                    # Evil hack for testing; please 2 fix me
-                    D2 = json.dumps({'meep': 'supermeep'})
-                else:
-                    D2 = json.dumps(i[1])
-
-            t2 += [(D1, D2)]
-
-        return hash(tuple(t2))
+        # We get straight to the point here by ensuring each hash is unique and
+        # deliberately generated to represent this specific object, even it has
+        # been deepcopied. This way, we can ensure correct object retrieval
+        # from a dictionary (or any other hash use) without traversing what can
+        # be a very complex recursive tree of namespaces.
+        return hash(self.__hash)
 
     def __str__(self):
         d = {}

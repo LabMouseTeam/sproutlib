@@ -22,6 +22,43 @@ class TestRecursionBar(TestRecursionBaz):
         pass
 
 
+class TestHashing(unittest.TestCase):
+    def test_basic(self):
+        _a = """
+            bar1: 'a'
+            baz1: 127
+            baz2: 'a'
+            """
+
+        _b = """
+            bar1: 'b'
+            baz1: 127
+            baz2: 'b'
+            """
+
+        _c = """
+            bar1: 'c'
+            baz1: 127
+            baz2: 'c'
+            """
+
+        a = TestRecursionBar(_a)
+        b = TestRecursionBar(_b)
+        c = TestRecursionBar(_c)
+
+        d = {}
+        d[a] = 'a'
+        d[b] = 'b'
+        d[c] = 'c'
+
+        if d[a] != 'a':
+            raise Exxception('TestHashing: unexpected value')
+        if d[b] != 'b':
+            raise Exxception('TestHashing: unexpected value')
+        if d[c] != 'c':
+            raise Exxception('TestHashing: unexpected value')
+
+
 class TestNoSuchObject(unittest.TestCase):
     '''
     Ensure that arbitrary objects outside of the namespace cause exceptions.
