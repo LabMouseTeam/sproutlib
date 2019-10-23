@@ -1,9 +1,21 @@
 '''
 This is a docstring to appease pylint. Fuck you, pylint.
 '''
-import inspect
 import json
-import yaml
+
+from inspect import getmembers as inspect_getmembers
+from inspect import isclass as inspect_isclass
+
+from random import getrandbits as random_getrandbits
+
+from copy import deepcopy as copy_deepcopy
+from copy import copy as copy_copy
+from time import time as time_time
+from math import modf as math_modf
+from threading import Lock
+
+from yaml.parser import ParserError as YAMLParserError
+from yaml import safe_load as yaml_safe_load
 
 
 class SproutStrictTypeException(Exception):
@@ -28,6 +40,26 @@ class SproutNoSuchAttributeException(Exception):
 
     The key 'baz' should raise this exception, as no such key exists within
     the namespace 'Foo'.
+    '''
+    pass
+
+
+class SproutBadStateException(Exception):
+    '''
+    This exception is raised when Sproutlib gets in a state that should never
+    occur in the real world. For example, when a lock that never times out
+    cannot actually return in a locked state. This should never happen, but
+    we check, anyway.
+    '''
+    pass
+
+
+class SproutIdentityException(Exception):
+    '''
+    This exception is raised when the internal identity map that ensures each
+    SproutSchema is unique, even if copied or deepcopied, identifies collision
+    during identity generation. This should never happen in the real world,
+    but we check for it, anyway.
     '''
     pass
 
@@ -57,16 +89,16 @@ class SproutSchema(dict):
         list,
         ]
 
-    __iter_i = 0
-    __iter_l = []
+    identity_lock = Lock()
+    identities = {}
 
     def _getmembers(self):
-        x = inspect.getmembers(self.__class__, lambda a: SproutSchema._find(a))
+        x = inspect_getmembers(self.__class__, lambda a: SproutSchema._find(a))
         return [i[1] for i in x]
 
     @staticmethod
     def _find(a):
-        if not inspect.isclass(a):
+        if not inspect_isclass(a):
             return False
 
         if issubclass(a, SproutSchema):
@@ -74,9 +106,43 @@ class SproutSchema(dict):
 
         return False
 
+    @staticmethod
+    def __generate_hash():
+        b = random_getrandbits(64)
+        c = random_getrandbits(16)
+
+        t = time_time()
+
+        # Use the entropic fraction.
+        f = math_modf(t)[0]
+        e = int(f * 1000000)
+
+        x = (c << 32) | e
+        return b ^ x
+
+    @classmethod
+    def __add_identity(cls, i):
+        if cls.identity_lock.acquire() is not True:
+            raise SproutBadStateException(
+                'SproutSchema.__add_identity: unexpected lock state')
+
+        if i in cls.identities:
+            cls.identity_lock.release()
+            raise SproutIdentityException(
+                'SproutSchema.__add_identity: identity exists')
+
+        cls.identities[i] = True
+        cls.identity_lock.release()
+
     def __init__(self, *args, **kw):
         # Init the dict with nothing in it.
         dict.__init__(self, (), **kw)
+
+        self.__iter_i = 0
+        self.__iter_l = []
+
+        self.__hash = self.__generate_hash()
+        SproutSchema.__add_identity(self.__hash)
 
         # If we were loaded with a dict, process each name by class.
         if len(args) == 0:
@@ -90,13 +156,28 @@ class SproutSchema(dict):
             except json.JSONDecodeError:
                 # If JSON didn't work, presume its YAML.
                 try:
-                    a = yaml.safe_load(args[0])
-                except yaml.parser.ParserError as E:
+                    a = yaml_safe_load(args[0])
+                except YAMLParserError as E:
                     raise E
         else:
             a = args[0]
 
         self.__do_update(a)
+
+    def __del__(self):
+        if SproutSchema.identity_lock.acquire() is not True:
+            raise SproutBadStateException(
+                'SproutSchema.__del__: can\'t lock on delete')
+
+        try:
+            SproutSchema.identities.pop(self.__hash)
+        except KeyError:
+            SproutSchema.identity_lock.release()
+            raise SproutIdentityException(
+                'SproutSchema.__del__: KeyError on delete for '
+                '{}'.format(self.__hash))
+
+        SproutSchema.identity_lock.release()
 
     def __do_update(self, d):
         for k in d.keys():
