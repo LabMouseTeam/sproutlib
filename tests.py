@@ -1,10 +1,14 @@
-from labmouse.sproutlib.Sproutlib import SproutNoSuchAttributeException
-from labmouse.sproutlib.Sproutlib import SproutStrictTypeException
-from labmouse.sproutlib.Sproutlib import SproutSchema
+# Copyright 2019 Lab Mouse, Inc. All Rights Reserved.
+'''
+Test harness for Sproutlib.
+'''
 import unittest
 import base64
 import json
-import sys
+
+from labmouse.sproutlib.Sproutlib import SproutNoSuchAttributeException
+from labmouse.sproutlib.Sproutlib import SproutStrictTypeException
+from labmouse.sproutlib.Sproutlib import SproutSchema
 
 
 class TestRecursionBaz(SproutSchema):
@@ -23,6 +27,9 @@ class TestRecursionBar(TestRecursionBaz):
 
 
 class TestHashing(unittest.TestCase):
+    '''
+    Evaluate the stability of the simple thread-safe hashing feature.
+    '''
     def test_basic(self):
         _a = """
             bar1: 'a'
@@ -52,11 +59,11 @@ class TestHashing(unittest.TestCase):
         d[c] = 'c'
 
         if d[a] != 'a':
-            raise Exxception('TestHashing: unexpected value')
+            raise Exception('TestHashing: unexpected value')
         if d[b] != 'b':
-            raise Exxception('TestHashing: unexpected value')
+            raise Exception('TestHashing: unexpected value')
         if d[c] != 'c':
-            raise Exxception('TestHashing: unexpected value')
+            raise Exception('TestHashing: unexpected value')
 
 
 class TestNoSuchObject(unittest.TestCase):
@@ -80,6 +87,8 @@ class TestNoSuchObject(unittest.TestCase):
             return
         except Exception as E:
             raise Exception('TestNoSuchObject: unexpected: {}'.format(E))
+
+        del f
 
         raise Exception('TestNoSuchObject: no attribute exception raised')
 
@@ -125,6 +134,8 @@ class TestRecursion(unittest.TestCase):
             return
         except Exception as E:
             raise Exception('TestRecursion: unexpected: {}'.format(E))
+
+        del f
 
         raise Exception('TestRecursion: no strict exception raised')
 
@@ -187,7 +198,7 @@ class TestOwnership(unittest.TestCase):
         __consumers = 0
         name = '<unset>'
 
-        def __init__(self, n, *args,**kwargs):
+        def __init__(self, n, *args, **kwargs):
             SproutSchema.__init__(self, *args, **kwargs)
             type(self).__consumers += 1
             self.name = n
@@ -225,8 +236,8 @@ class TestOwnership(unittest.TestCase):
         if f2.name != 'f2':
             raise Exception('TestOwnership: class->instance variable failure')
 
-        del(f1)
-        del(f2)
+        del f1
+        del f2
 
         if self.Foo.consumers() != 0:
             raise Exception('TestOwnership: consumer value doesnt match')
@@ -322,7 +333,6 @@ class TestObject(unittest.TestCase):
             def __eq__(self, x):
                 return self.baz == x.baz and self.buu == x.buu
 
-
         class Foo(SproutSchema):
             class object1(SproutSchema):
                 required = True
@@ -345,7 +355,6 @@ class TestObject(unittest.TestCase):
             def __init__(self, *args, **kwargs):
                 SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
-
 
         S = '{"object1": {"baz": "testme", "buu": 1}}'
         f = Foo(S)
@@ -383,7 +392,6 @@ class TestObject(unittest.TestCase):
                 d = {'baz': self.baz, 'buu': self.buu}
                 return json.dumps(d)
 
-
         class Foo(SproutSchema):
             class object1(SproutSchema):
                 required = True
@@ -407,7 +415,6 @@ class TestObject(unittest.TestCase):
             def __init__(self, *args, **kwargs):
                 SproutSchema.__init__(self, *args, **kwargs)
                 self.unpickle_all()
-
 
         b1 = Bar()
         b2 = Bar()
