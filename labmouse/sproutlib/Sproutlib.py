@@ -8,7 +8,7 @@ import yaml
 
 class SproutStrictTypeException(Exception):
     '''
-    This is a docstring to appease pylint. Fuck you, pylint.
+    This is simply a container for using a named (not generic) Exception.
     '''
     pass
 
@@ -41,7 +41,6 @@ class SproutSchema(dict):
     hidden = False
     subtype = None
     type = str
-
 
     '''
     This is a docstring to appease pylint. Fuck you, pylint.
@@ -166,7 +165,8 @@ class SproutSchema(dict):
                 x = getattr(k, i[0], None)
                 if x is None:
                     raise SproutNoSuchAttributeException(
-                        "SproutRoot.set: no such object '{0}' within namespace {1}".format(
+                        "SproutRoot.set: no object '{0}' in "
+                        "namespace {1}".format(
                             i[0],
                             k))
 
@@ -176,7 +176,8 @@ class SproutSchema(dict):
 
                     if isinstance(i[1], x.type) is not True:
                         raise SproutStrictTypeException(
-                            "SproutRoot.set: strict obj={2}['{3}'] types=({0}!={1})".format(
+                            "SproutRoot.set: strict obj={2}['{3}'] "
+                            "types=({0}!={1})".format(
                                 type(i[1]),
                                 x.type,
                                 k,
@@ -313,7 +314,7 @@ class SproutSchema(dict):
             D2 = i[1]
             if isinstance(i[1], dict) or isinstance(i[1], list):
                 if isinstance(i[1], SproutSchema) is True:
-                    #XXX D2 = json.dumps(i[1].items())
+                    # XXX D2 = json.dumps(i[1].items())
                     # Evil hack for testing; please 2 fix me
                     D2 = json.dumps({'meep': 'supermeep'})
                 else:
@@ -362,7 +363,7 @@ class SproutSchema(dict):
             v = d[k]
 
             # If the key isn't a string, use the class name.
-            if (isinstance(k, str) is not True) and issubclass(k, SproutSchema):
+            if isinstance(k, str) is not True and issubclass(k, SproutSchema):
                 k = k.__name__
 
             # If the object is iterable, get recursive.
