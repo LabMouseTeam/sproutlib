@@ -504,3 +504,11 @@ class SproutSchema(dict):
         r = ", ".join(s)
 
         return "[{0}]".format(r)
+
+    def __eq__(self, x):
+        if isinstance(x, SproutSchema) is not True:
+            return False
+
+        _x = str(x)
+        _y = str(self)
+        return _x == _y

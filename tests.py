@@ -26,6 +26,45 @@ class TestRecursionBar(TestRecursionBaz):
         pass
 
 
+class TestEquality(unittest.TestCase):
+    '''
+    Ensure two objects are considered the same if their visible namespaces are
+    the same. This bypasses the unique hash and any internal/hidden objects
+    that are not meant for the "public" namespace.
+    '''
+    def test_equal(self):
+        s = """
+            bar1: 'i am bar1'
+            baz1: 127
+            baz2: 'i am baz2'
+            """
+
+        f1 = TestRecursionBar(s)
+        f2 = TestRecursionBar(s)
+
+        if f1 != f2:
+            raise Exception('TestEquality: objects not equal')
+
+    def test_notequal(self):
+        s1 = """
+            bar1: 'i am bar1'
+            baz1: 127
+            baz2: 'i am baz2'
+            """
+
+        s2 = """
+            bar1: 'i am bar1'
+            baz1: 128
+            baz2: 'i am baz2'
+            """
+
+        f1 = TestRecursionBar(s1)
+        f2 = TestRecursionBar(s2)
+
+        if f1 == f2:
+            raise Exception('TestEquality: objects are equal')
+
+
 class TestHashing(unittest.TestCase):
     '''
     Evaluate the stability of the simple thread-safe hashing feature.
