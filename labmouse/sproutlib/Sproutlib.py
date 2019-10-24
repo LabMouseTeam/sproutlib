@@ -92,6 +92,9 @@ class SproutSchema(dict):
     identity_lock = Lock()
     identities = {}
 
+    logger_lock = Lock()
+    logger = None
+
     def _getmembers(self):
         x = inspect_getmembers(self.__class__, lambda a: SproutSchema._find(a))
         return [i[1] for i in x]
@@ -119,6 +122,25 @@ class SproutSchema(dict):
 
         x = (c << 32) | e
         return b ^ x
+
+    @classmethod
+    def add_logger(cls, x):
+        '''
+        Use a class based logger (which is inherently a thread safe object)
+        so each SproutSchema can use it without having to pass the object
+        around or create duplicates.
+
+        This function should be called by the top level SproutSchema to
+        immediately make the logger available to subs that expect one.
+        '''
+        if cls.logger_lock.acquire() is not True:
+            raise SproutBadStateException(
+                'SproutSchame.add_logger: unexpected lock state')
+
+        if cls.logger is None:
+            cls.logger = x
+
+        cls.logger_lock.release()
 
     @classmethod
     def __add_identity(cls, i):
@@ -282,7 +304,7 @@ class SproutSchema(dict):
 
         if k is None:
             raise SproutNoSuchAttributeException(
-                'SproutRoot.set: no such attribute: {}'.format(k))
+                'SproutRoot.set: no such attribute: {}'.format(_k))
 
         return self.__test_strict(k, v)
 
