@@ -1,0 +1,23 @@
+process:
+  launcher:
+    thread_ceiling: 3
+    strategy: 'restart'
+    monitor_timeout: 3.0
+    sandbox:
+      detach: False
+      working_directory: '/test2'
+      chroot_directory: '/tmp/test'
+      umask: 011
+      uid: 1000
+      gid: 1000
+    child:
+      library_path: 'labmouse.launcher'
+      module: 'dummy'
+      class_name: 'Dummy'
+      config: './config.yaml'
+    pidfile:
+      path: '/var/tmp/test.pid'
+log:
+  console: true
+  path: './tmp.log'
+  format: '%(created)d,%(asctime)s.%(relativeCreated)dms %(process)d,%(thread)d %(levelname)s %(pathname)s,%(module)s:%(lineno)d %(message)s'

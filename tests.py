@@ -1,14 +1,14 @@
 # Copyright 2019 Lab Mouse, Inc. All Rights Reserved.
 '''
-Test harness for Sproutlib.
+Test harness for sproutlib.
 '''
 import unittest
 import base64
 import json
 
-from labmouse.sproutlib.Sproutlib import SproutNoSuchAttributeException
-from labmouse.sproutlib.Sproutlib import SproutStrictTypeException
-from labmouse.sproutlib.Sproutlib import SproutSchema
+from labmouse.sproutlib.sproutlib import SproutNoSuchAttributeException
+from labmouse.sproutlib.sproutlib import SproutStrictTypeException
+from labmouse.sproutlib.sproutlib import SproutSchema
 
 
 class TestRecursionBaz(SproutSchema):
