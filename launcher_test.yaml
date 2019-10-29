@@ -14,7 +14,7 @@ process:
       library_path: 'labmouse.launcher'
       module: 'dummy'
       class_name: 'Dummy'
-      config: './config.yaml'
+      config: './dummy_config.yaml'
     pidfile:
       path: '/var/tmp/test.pid'
 log:
