@@ -20,4 +20,4 @@ process:
 log:
   console: true
   path: './tmp.log'
-  format: '%(created)d,%(asctime)s.%(relativeCreated)dms %(process)d,%(thread)d %(levelname)s %(pathname)s,%(module)s:%(lineno)d %(message)s'
+  format: '%(created)d.%(relativeCreated)dms %(process)d,%(thread)d %(levelname)s %(pathname)s,%(module)s:%(lineno)d %(message)s'
