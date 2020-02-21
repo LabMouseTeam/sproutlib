@@ -1,8 +1,10 @@
 '''
 Generic container for the Launcher subsystem.
 '''
-import time
 import os
+import time
+
+from threading import enumerate as threading_enumerate
 
 from labmouse.sproutlib.sproutlib import SproutSchema
 from labmouse.launcher.launcher import Launcher
@@ -60,3 +62,6 @@ class ProcessLauncher(SproutSchema):
 
         # Run the child within the daemon context.
         L.run()
+
+        self.logger.debug(
+            'exiting; threads alive={}'.format(len(threading_enumerate())))
